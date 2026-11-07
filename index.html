@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Schutz Family Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#f7f3ec; --card:#fffdf9; --ink:#2b2621; --muted:#76695c; --line:#d9cfc2;
+  --accent:#7a4b2a; --accent-soft:#efe3d6; --m:#5b7186; --f:#9a5b6a; --u:#8b8378;
+  --serif:"Source Serif 4", Georgia, serif; --sans:Inter, system-ui, -apple-system, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+header{position:sticky;top:0;z-index:20;background:rgba(247,243,236,.96);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);text-decoration:none;white-space:nowrap}
+nav{display:flex;gap:4px}
+nav a{padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-weight:500;font-size:15px}
+nav a.on{background:var(--accent-soft);color:var(--accent)}
+.search{position:relative;flex:1;min-width:200px;max-width:420px;margin-left:auto}
+.search input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:inherit;font-size:16px}
+.search input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.results{position:absolute;top:44px;left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 8px 24px rgba(60,40,20,.12);max-height:60vh;overflow:auto;display:none}
+.results a{display:block;padding:9px 12px;text-decoration:none;color:var(--ink);border-bottom:1px solid #f0e9df}
+.results a:last-child{border-bottom:0}
+.results a:hover,.results a.sel{background:var(--accent-soft)}
+.results small{color:var(--muted);margin-left:6px}
+main{min-height:calc(100% - 60px)}
+
+/* tree */
+.treebar{display:flex;gap:8px;align-items:center;padding:10px 16px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.treebar .who{font-family:var(--serif);font-size:18px;color:var(--ink);margin-right:auto}
+.pill{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;color:var(--ink);font-size:14px}
+.pill:hover{border-color:var(--accent)}
+.scroller{overflow:auto;height:calc(100vh - 120px);height:calc(100dvh - 120px);touch-action:pan-x pan-y;cursor:grab}
+.scroller.drag{cursor:grabbing}
+svg text{font-family:var(--sans)}
+.node{cursor:pointer}
+.node rect.bg{fill:var(--card);stroke:var(--line);stroke-width:1}
+.node:hover rect.bg{stroke:var(--accent)}
+.node.center rect.bg{stroke:var(--accent);stroke-width:2.5;fill:#fff8ef}
+.node .nm{font-size:13.5px;font-weight:600;fill:var(--ink)}
+.node .yr{font-size:12px;fill:var(--muted)}
+.node.living .nm{fill:var(--muted);font-weight:500;font-style:italic}
+.edge{fill:none;stroke:#b9ab99;stroke-width:1.4}
+.edge.sp{stroke-dasharray:4 4}
+.glabel{font-size:11px;fill:#a89a89;letter-spacing:.08em;text-transform:uppercase}
+
+/* sheet */
+.sheet{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(440px,calc(100% - 24px));z-index:30;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(60,40,20,.18);padding:14px 16px;display:none}
+.sheet h3{margin:0;font-family:var(--serif);font-size:20px;font-weight:600}
+.sheet p{margin:2px 0 12px;color:var(--muted);font-size:14px}
+.sheet .row{display:flex;gap:8px}
+.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:#fff;font-weight:500;text-decoration:none;display:inline-block}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.sheet .x{position:absolute;right:10px;top:8px;border:0;background:none;font-size:22px;color:var(--muted)}
+
+/* person */
+.page{max-width:860px;margin:0 auto;padding:24px 18px 80px}
+.page h1{font-family:var(--serif);font-weight:600;font-size:34px;line-height:1.15;margin:0 0 6px}
+.lede{color:var(--muted);margin:0 0 4px}
+.aka{color:var(--muted);font-size:14px;font-style:italic}
+.actions{margin:14px 0 8px;display:flex;gap:8px;flex-wrap:wrap}
+section{margin-top:30px}
+section h2{font-family:var(--serif);font-size:21px;font-weight:600;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.facts{display:grid;grid-template-columns:110px 1fr;gap:6px 14px}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0}
+.fam h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 6px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--u);
+  border-radius:9px;padding:6px 11px;text-decoration:none;color:var(--ink);min-width:150px}
+.chip.M{border-left-color:var(--m)} .chip.F{border-left-color:var(--f)}
+.chip:hover{border-color:var(--accent)}
+.chip b{font-weight:600;font-size:15px} .chip span{font-size:12.5px;color:var(--muted)}
+.chip.living b{font-weight:500;font-style:italic;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:72px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid #eee5d9}
+.tl .y{font-family:var(--serif);font-size:18px;color:var(--accent)}
+.tl .what{font-weight:500}
+.tl .det{color:var(--muted);font-size:14.5px}
+.tl .note{font-size:14.5px;margin-top:4px;color:#4a4036}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.thumb{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;padding:0;text-align:left;color:var(--ink)}
+.thumb img{width:100%;height:150px;object-fit:cover;display:block;background:#eee}
+.thumb span{display:block;font-size:13px;padding:7px 9px;line-height:1.35}
+.story{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.story h3{margin:0 0 6px;font-family:var(--serif);font-size:18px}
+.story p{margin:0;white-space:pre-line}
+details summary{cursor:pointer;color:var(--accent);font-weight:500}
+.srcs{font-size:14px;color:#4a4036;padding-left:18px}
+.srcs li{margin:5px 0}
+.srcs small{color:var(--muted)}
+.about p{margin:0 0 12px;font-family:var(--serif);font-size:18px;line-height:1.6}
+.pid{margin-top:40px;color:#b0a392;font-size:12.5px}
+.notice{background:var(--accent-soft);border-radius:10px;padding:12px 14px;color:#5a4030;font-size:14.5px}
+
+/* people index */
+.letters{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 16px}
+.letters a{padding:3px 8px;border-radius:6px;text-decoration:none;background:var(--card);border:1px solid var(--line);font-size:14px}
+.surname h2{font-size:19px}
+.plist{columns:2 240px;column-gap:24px;margin:0;padding:0;list-style:none}
+.plist li{break-inside:avoid;padding:3px 0}
+.plist a{text-decoration:none;color:var(--ink)}
+.plist a:hover{color:var(--accent);text-decoration:underline}
+.plist small{color:var(--muted)}
+
+/* lightbox */
+.lb{position:fixed;inset:0;background:#15110d;z-index:50;display:none;flex-direction:column}
+.lb .bar{display:flex;align-items:center;gap:10px;color:#eee;padding:10px 14px}
+.lb .bar .close{margin-left:auto}
+.lb .cap{color:#e9e2d8;font-size:15px;padding:0 14px 8px}
+.lb .bar button,.lb .bar a{white-space:nowrap;background:rgba(255,255,255,.12);border:0;color:#fff;border-radius:8px;padding:6px 12px;text-decoration:none;font-size:15px}
+.lb .img{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:8px}
+.lb img{max-width:100%;height:auto;background:#fff}
+.lb img.zoom{max-width:none;width:180%}
+@media (max-width:640px){
+  header{padding:8px 12px}
+  .brand{font-size:18px}
+  .search{order:3;flex-basis:100%;max-width:none}
+  .page h1{font-size:27px}
+  .facts{grid-template-columns:86px 1fr}
+  .tl li{grid-template-columns:56px 1fr}
+  .scroller{height:calc(100dvh - 160px)}
+  .treebar{gap:6px;padding:8px 12px}
+  .treebar .who{flex-basis:100%;font-size:16px}
+  .pill{padding:4px 10px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#/">Schutz Family Tree</a>
+  <nav><a href="#/" id="nTree">Tree</a><a href="#/people" id="nPeople">Everyone</a></nav>
+  <div class="search">
+    <input id="q" type="search" placeholder="Search a name…" autocomplete="off" aria-label="Search people">
+    <div class="results" id="res"></div>
+  </div>
+</header>
+<main id="app"></main>
+
+<div class="sheet" id="sheet" role="dialog">
+  <button class="x" aria-label="Close" onclick="hideSheet()">×</button>
+  <h3 id="shName"></h3><p id="shYrs"></p>
+  <div class="row"><a class="btn" id="shOpen">Open their page</a><a class="btn ghost" id="shCenter">Center tree here</a></div>
+</div>
+
+<div class="lb" id="lb">
+  <div class="bar"><button onclick="lbStep(-1)" aria-label="Previous">‹ Prev</button><button onclick="lbStep(1)" aria-label="Next">Next ›</button>
+    <button onclick="lbZoom()">Zoom</button><a id="lbOpen" target="_blank" rel="noopener">Full size</a>
+    <button class="close" onclick="lbClose()" aria-label="Close">✕</button></div>
+  <div class="cap" id="lbCap"></div>
+  <div class="img"><img id="lbImg" alt=""></div>
+</div>
+
+<script src="data.js"></script>
+<script src="stories.js"></script>
+<script>
+const T = window.TREE, P = T.people, F = T.families;
+const STORIES = window.STORIES || {};
+const ROOT = T.root || Object.keys(P)[0];
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function fullName(p){ return [p.given, p.surname, p.suffix].filter(Boolean).join(" ") || "Unknown"; }
+function yr(e){ const m = e && (e.date||"").match(/\d{4}/); return m ? m[0] : ""; }
+function approx(e){ return e && /about|before|after|between/i.test(e.date||"") ? "c. " : ""; }
+function years(p){
+  if (p.given === "Living" && !p.surname) return "";
+  const b = yr(p.birth), d = yr(p.death);
+  if (!b && !d) return "";
+  return (b ? approx(p.birth)+b : "?") + "–" + (d ? approx(p.death)+d : "");
+}
+function isLiving(p){ return p.given === "Living" && !p.surname; }
+function parentsOf(id){
+  const p = P[id]; if (!p || !p.famc.length) return [null,null];
+  const f = F[p.famc[0]]; return [f.husb, f.wife];
+}
+function spouseFams(id){
+  return (P[id]?.fams||[]).map(fid => { const f = F[fid]; return {f, sp: f.husb===id ? f.wife : f.husb}; });
+}
+function childrenOf(id){ const out=[]; spouseFams(id).forEach(({f}) => f.children.forEach(c => out.includes(c)||out.push(c))); return out; }
+function siblingsOf(id){
+  const out=[]; (P[id]?.famc||[]).forEach(fid => F[fid].children.forEach(c => c!==id && !out.includes(c) && out.push(c)));
+  return out.sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999));
+}
+
+/* ---------- search ---------- */
+const fold = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss").toLowerCase();
+const INDEX = Object.entries(P).filter(([,p])=>!isLiving(p)).map(([id,p]) => ({id, hay: fold([p.given,p.surname,...(p.alt||[])].join(" "))}));
+let selIdx = -1;
+$("#q").addEventListener("input", () => {
+  const toks = fold($("#q").value).split(/\s+/).filter(Boolean);
+  const res = $("#res");
+  if (!toks.length){ res.style.display="none"; return; }
+  const hits = INDEX.filter(x => toks.every(t => x.hay.includes(t))).slice(0, 15);
+  selIdx = -1;
+  res.innerHTML = hits.length ? hits.map(h => `<a href="#/p/${h.id}">${esc(fullName(P[h.id]))}<small>${esc(years(P[h.id]))}</small></a>`).join("")
+                              : `<a style="color:var(--muted)">No matches</a>`;
+  res.style.display = "block";
+});
+$("#q").addEventListener("keydown", e => {
+  const links = [...$("#res").querySelectorAll("a[href]")];
+  if (!links.length) return;
+  if (e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); selIdx = (selIdx + (e.key==="ArrowDown"?1:-1) + links.length) % links.length;
+    links.forEach((l,i)=>l.classList.toggle("sel", i===selIdx)); }
+  if (e.key==="Enter"){ (links[selIdx] || links[0]).click(); }
+});
+document.addEventListener("click", e => { if (!e.target.closest(".search")) $("#res").style.display="none"; });
+function clearSearch(){ $("#q").value=""; $("#res").style.display="none"; $("#q").blur(); }
+
+/* ---------- tree ---------- */
+const BW=172, BH=58, HG=18, VG=54;
+let GENS = +(localStorage.getItem?.("gens")||3) || 3;
+try { GENS = +localStorage.getItem("gens") || 3; } catch(e){}
+
+function renderTree(id){
+  if (!P[id]) id = ROOT;
+  const p = P[id];
+  const nodes=[], edges=[];
+  const W = Math.pow(2,GENS)*(BW+HG);
+  const rowY = g => (GENS - g)*(BH+VG);          // g=0 center row
+  const cx = W/2, cy = rowY(0);
+  nodes.push({id, x:cx, y:cy, center:true});
+  // ancestors
+  function anc(pid, g, i){
+    if (g >= GENS) return;
+    const [fa, mo] = parentsOf(pid);
+    const slotW = W/Math.pow(2,g+1);
+    const xs = [], par=[[fa,2*i],[mo,2*i+1]];
+    const childX = W/Math.pow(2,g)*(i+.5), childY = rowY(g);
+    par.forEach(([q,j]) => { if (!q) return;
+      const x = slotW*(j+.5), y = rowY(g+1);
+      nodes.push({id:q,x,y}); xs.push(x); anc(q, g+1, j); });
+    if (xs.length){
+      const mid = childY - VG/2;
+      edges.push(`M${childX},${childY} V${mid}`);
+      edges.push(`M${Math.min(...xs)},${mid} H${Math.max(...xs)}`);
+      xs.forEach(x => edges.push(`M${x},${mid} V${rowY(g+1)+BH}`));
+    }
+  }
+  anc(id, 0, 0);
+  // spouses
+  const sfs = spouseFams(id);
+  let sx = cx;
+  sfs.forEach(({sp}) => { if (!sp) return; sx += BW+HG+10; nodes.push({id:sp,x:sx,y:cy,spouse:true});
+    edges.push({d:`M${sx-BW/2-HG-10},${cy+BH/2} H${sx-BW/2}`, sp:true}); });
+  // descendants (2 generations)
+  const DESC = 2;
+  function width(pid, d){ if (d>=DESC) return BW+HG; const ch=childrenOf(pid); if(!ch.length) return BW+HG;
+    return Math.max(BW+HG, ch.reduce((s,c)=>s+width(c,d+1),0)); }
+  function place(pid, d, left, x, y){
+    const ch = d<DESC ? childrenOf(pid) : [];
+    if (!ch.length) return;
+    let cur = x - ch.reduce((s,c)=>s+width(c,d+1),0)/2;
+    const xs=[], cyy = y + BH + VG;
+    ch.forEach(c => { const w = width(c,d+1); const xx = cur + w/2; nodes.push({id:c,x:xx,y:cyy}); xs.push(xx); place(c,d+1,cur,xx,cyy); cur += w; });
+    const mid = y + BH + VG/2;
+    edges.push(`M${x},${y+BH} V${mid}`);
+    edges.push(`M${Math.min(...xs, x)},${mid} H${Math.max(...xs, x)}`);
+    xs.forEach(xx => edges.push(`M${xx},${mid} V${cyy}`));
+  }
+  const descX = sfs.some(s=>s.sp) ? cx + (BW+HG+10)/2 : cx;
+  if (childrenOf(id).length){
+    // drop line from couple midpoint
+    place(id, 0, 0, descX, cy);
+  }
+  // bounds
+  const minX = Math.min(...nodes.map(n=>n.x)) - BW/2 - 30, maxX = Math.max(...nodes.map(n=>n.x)) + BW/2 + 30;
+  const minY = -30, maxY = Math.max(...nodes.map(n=>n.y)) + BH + 40;
+  const vw = maxX-minX, vh = maxY-minY;
+  const narrow = document.documentElement.clientWidth < 640;
+  const fit = Math.max(narrow ? .8 : .5, Math.min(1, (document.documentElement.clientWidth-24)/vw));
+  const zoom = window.__zoom || fit; window.__lastZoom = zoom;
+  const labels = [];
+  for (let g=1; g<=GENS; g++){
+    const name = ["","Parents","Grandparents","Great-grandparents","2nd great-grandparents","3rd great-grandparents"][g];
+    if (nodes.some(n=>n.y===rowY(g))) labels.push(`<text class="glabel" x="${minX+12}" y="${rowY(g)-8}">${name}</text>`);
+  }
+  const nodeSvg = nodes.map(n => {
+    const q = P[n.id]; const liv = isLiving(q);
+    const name = fullName(q); const lines = wrap(name, 19);
+    const col = q.sex==="M" ? "var(--m)" : q.sex==="F" ? "var(--f)" : "var(--u)";
+    const y0 = lines.length>1 ? 20 : 25;
+    return `<g class="node${n.center?' center':''}${liv?' living':''}" data-id="${n.id}" transform="translate(${n.x-BW/2},${n.y})" tabindex="0" role="button" aria-label="${esc(name)}">
+      <rect class="bg" width="${BW}" height="${BH}" rx="9"/>
+      <rect x="0" y="0" width="5" height="${BH}" rx="2" fill="${col}"/>
+      ${lines.map((l,i)=>`<text class="nm" x="14" y="${y0+i*16}">${esc(l)}</text>`).join("")}
+      <text class="yr" x="14" y="${lines.length>1?52:46}">${esc(years(q))}</text></g>`;
+  }).join("");
+  const edgeSvg = edges.map(e => typeof e==="string" ? `<path class="edge" d="${e}"/>` : `<path class="edge sp" d="${e.d}"/>`).join("");
+  $("#app").innerHTML = `
+    <div class="treebar"><span class="who">${isLiving(p)?"Starting point":"Centered on "+esc(fullName(p))}</span>
+      <button class="pill" onclick="setGens(-1)">− generations</button>
+      <button class="pill" onclick="setGens(1)">+ generations</button>
+      <button class="pill" onclick="zoomBy(.8)" aria-label="Zoom out">−</button>
+      <button class="pill" onclick="zoomBy(1.25)" aria-label="Zoom in">+</button>
+      ${id!==ROOT?`<a class="pill" href="#/">Back to start</a>`:""}
+      ${isLiving(p)?"":`<a class="pill" href="#/p/${id}">Open page</a>`}</div>
+    <div class="scroller" id="sc"><svg id="svg" width="${vw*zoom}" height="${vh*zoom}" viewBox="${minX} ${minY} ${vw} ${vh}">
+      ${labels.join("")}${edgeSvg}${nodeSvg}</svg></div>`;
+  // scroll to center person
+  const sc = $("#sc");
+  requestAnimationFrame(() => {
+    sc.scrollLeft = (cx - minX)*zoom - sc.clientWidth/2;
+    sc.scrollTop = (cy - minY)*zoom - sc.clientHeight*0.6;
+  });
+  sc.querySelectorAll(".node").forEach(g => {
+    g.addEventListener("click", ev => { if (dragMoved) return; showSheet(g.dataset.id); });
+    g.addEventListener("keydown", ev => { if (ev.key==="Enter") showSheet(g.dataset.id); });
+  });
+  enableDrag(sc);
+}
+function wrap(s, n){
+  if (s.length<=n) return [s];
+  const words = s.split(" "); let a="", lines=[];
+  for (const w of words){ if ((a+" "+w).trim().length>n && a){ lines.push(a); a=w; } else a=(a+" "+w).trim(); }
+  lines.push(a);
+  if (lines.length>2){ lines = [lines[0], lines.slice(1).join(" ")]; }
+  if (lines[1] && lines[1].length>n) lines[1] = lines[1].slice(0,n-1)+"…";
+  return lines;
+}
+function setGens(d){ GENS = Math.max(1, Math.min(5, GENS+d)); try{localStorage.setItem("gens",GENS)}catch(e){} route(); }
+function zoomBy(f){ window.__zoom = Math.max(.3, Math.min(2.2, (window.__lastZoom||1)*f)); route(); }
+let dragMoved=false;
+function enableDrag(el){
+  let sx, sy, sl, st, down=false;
+  el.addEventListener("pointerdown", e => { if (e.pointerType!=="mouse") return; down=true; dragMoved=false; sx=e.clientX; sy=e.clientY; sl=el.scrollLeft; st=el.scrollTop; });
+  window.addEventListener("pointermove", e => { if(!down) return; const dx=e.clientX-sx, dy=e.clientY-sy;
+    if (Math.abs(dx)+Math.abs(dy)>4){ dragMoved=true; el.classList.add("drag"); } el.scrollLeft=sl-dx; el.scrollTop=st-dy; });
+  window.addEventListener("pointerup", () => { down=false; el.classList.remove("drag"); setTimeout(()=>dragMoved=false,0); });
+}
+function showSheet(id){
+  const p = P[id];
+  $("#shName").textContent = fullName(p);
+  const b = p.birth, d = p.death;
+  $("#shYrs").textContent = isLiving(p) ? "Details hidden for living relatives" :
+    [b && (b.date||b.place) ? "Born "+[b.date,b.place].filter(Boolean).join(", ") : "", d && (d.date||d.place) ? "Died "+[d.date,d.place].filter(Boolean).join(", ") : ""].filter(Boolean).join(" · ") || years(p);
+  const open = $("#shOpen"); open.href = "#/p/"+id; open.style.display = isLiving(p) ? "none" : "";
+  $("#shCenter").href = "#/tree/"+id;
+  $("#sheet").style.display = "block";
+}
+function hideSheet(){ $("#sheet").style.display = "none"; }
+
+/* ---------- person page ---------- */
+function chip(id, extra){
+  const q = P[id]; if (!q) return "";
+  const liv = isLiving(q);
+  const href = liv ? `#/tree/${id}` : `#/p/${id}`;
+  return `<a class="chip ${q.sex||""}${liv?' living':''}" href="${href}"><b>${esc(fullName(q))}</b><span>${esc([years(q), extra].filter(Boolean).join(" · ")) || "&nbsp;"}</span></a>`;
+}
+let LB = [], lbI = 0;
+function renderPerson(id){
+  const p = P[id];
+  if (!p || isLiving(p)) { renderTree(id); return; }
+  const [fa, mo] = parentsOf(id);
+  const sfs = spouseFams(id);
+  const sibs = siblingsOf(id);
+  const b = p.birth, d = p.death;
+  const lede = [b && (b.date||b.place) ? `Born ${esc([b.date,b.place].filter(Boolean).join(" in "))}` : "",
+                d && (d.date||d.place) ? `Died ${esc([d.date,d.place].filter(Boolean).join(" in "))}` : ""].filter(Boolean);
+  // timeline: own events + marriages + children's births
+  let tl = p.events.filter(e=>e.t!=="BIRT"||true).map(e => ({...e}));
+  sfs.forEach(({f, sp}) => { if (f.marr && (f.marr.date||f.marr.place))
+    tl.push({label:"Married"+(sp?" "+fullName(P[sp]):""), date:f.marr.date, place:f.marr.place, note:"", link:sp}); });
+  tl = tl.map(e => ({...e, y: (e.date||"").match(/\d{4}/)?.[0] || ""}));
+  const order = {BIRT:0,BAPM:1,CHR:1,DEAT:8,BURI:9,PROB:10};
+  tl.sort((a,b)=> (a.y||"9999").localeCompare(b.y||"9999") || ((order[a.t]??5)-(order[b.t]??5)));
+  // collapse repeated "Lived in" with same place
+  const seen = new Set();
+  tl = tl.filter(e => { if (e.t!=="RESI") return true; if (!e.place && !e.note) return false; const k=e.y+"|"+e.place; if (seen.has(k)) return false; seen.add(k); return true; });
+  const tlHtml = tl.length ? `<ul class="tl">${tl.map(e => `<li><div class="y">${esc(e.y)||"—"}</div><div>
+      <div class="what">${esc(e.label)}${e.t==="EVEN"||e.t==="_MILT"?"":""}</div>
+      <div class="det">${esc([e.date && e.date!==e.y ? e.date : "", e.place].filter(Boolean).join(" · "))}</div>
+      ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}</div></li>`).join("")}</ul>` : `<p class="lede">No dated events recorded yet.</p>`;
+  LB = p.media;
+  const mediaHtml = p.media.length ? `<section><h2>Records &amp; photos</h2><div class="grid">${p.media.map((m,i)=>
+      `<button class="thumb" onclick="lbOpen(${i})"><img loading="lazy" src="thumb/${esc(m.f)}" alt="${esc(m.c)}"><span>${esc(m.c)}</span></button>`).join("")}</div></section>` : "";
+  const stories = p.stories.length ? `<section><h2>Stories</h2>${p.stories.map(s=>`<div class="story"><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join("")}</section>` : "";
+  const notes = p.notes.length ? `<section><h2>Notes</h2>${p.notes.map(n=>`<div class="story"><p>${esc(n)}</p></div>`).join("")}</section>` : "";
+  const srcs = p.sources.length ? `<section><h2>Sources</h2><details><summary>${p.sources.length} source${p.sources.length>1?"s":""} cited</summary>
+      <ul class="srcs">${p.sources.map(s=>`<li>${esc(s.title)}${s.page?`<br><small>${esc(s.page)}</small>`:""}</li>`).join("")}</ul></details></section>` : "";
+  const famBlock = (title, ids, extra) => ids.filter(Boolean).length ? `<h3>${title}</h3><div class="chips">${ids.filter(Boolean).map(i=>chip(i, extra && extra(i))).join("")}</div>` : "";
+  let spouses = sfs.filter(s=>s.sp).map(({f,sp}) => ({sp, m: f.marr ? ["m.", f.marr.date].filter(Boolean).join(" ") : ""}));
+  let fam = famBlock("Parents", [fa, mo]);
+  if (spouses.length) fam += `<h3>${spouses.length>1?"Spouses":"Spouse"}</h3><div class="chips">${spouses.map(s=>chip(s.sp, s.m && s.m!=="m." ? s.m : "")).join("")}</div>`;
+  sfs.forEach(({f, sp}) => { if (f.children.length) {
+    const lbl = sfs.length>1 && sp ? `Children with ${esc(fullName(P[sp]))}` : "Children";
+    fam += `<h3>${lbl}</h3><div class="chips">${[...f.children].sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(c=>chip(c)).join("")}</div>`; } });
+  fam += famBlock("Siblings", sibs);
+  const ab = typeof STORIES[id]==="string" ? STORIES[id].trim() : "";
+  const about = ab ? `<section class="about"><h2>About</h2>${ab.split(/\n\s*\n/).map(par=>`<p>${esc(par.trim())}</p>`).join("")}</section>` : "";
+  $("#app").innerHTML = `<article class="page">
+    <h1>${esc(fullName(p))}</h1>
+    ${lede.map(l=>`<p class="lede">${l}</p>`).join("")}
+    ${p.alt.length ? `<p class="aka">Also recorded as ${p.alt.map(esc).join("; ")}</p>` : ""}
+    <div class="actions"><a class="btn" href="#/tree/${id}">Show in tree</a></div>
+    ${about}
+    <section class="fam"><h2>Family</h2>${fam || '<p class="lede">No family links recorded.</p>'}</section>
+    <section><h2>Life events</h2>${tlHtml}</section>
+    ${mediaHtml}${stories}${notes}${srcs}
+    <p class="pid">Page ID: ${esc(id)}</p>
+  </article>`;
+  window.scrollTo(0,0);
+}
+
+/* ---------- everyone ---------- */
+function renderPeople(){
+  const groups = {};
+  Object.entries(P).forEach(([id,p]) => { if (isLiving(p)) return; const s = p.surname || "(no surname)"; (groups[s] ||= []).push(id); });
+  const names = Object.keys(groups).sort((a,b)=>fold(a).localeCompare(fold(b)));
+  const letters = [...new Set(names.map(n=>fold(n)[0].toUpperCase()))];
+  $("#app").innerHTML = `<div class="page"><h1>Everyone in the tree</h1>
+    <p class="lede">${INDEX.length} people, grouped by surname.${T.livingHidden?" Living relatives aren't listed.":""}</p>
+    <div class="letters">${letters.map(l=>`<a href="javascript:void(0)" onclick="document.getElementById('L-${l}').scrollIntoView({behavior:'smooth'})">${l}</a>`).join("")}</div>
+    ${names.map((n,i)=>{ const L=fold(n)[0].toUpperCase(); const first = i===0 || fold(names[i-1])[0].toUpperCase()!==L;
+      return `<section class="surname"${first?` id="L-${L}"`:""}><h2>${esc(n)} <small style="color:var(--muted);font-size:14px">${groups[n].length}</small></h2><ul class="plist">${
+      groups[n].sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(id=>`<li><a href="#/p/${id}">${esc(fullName(P[id]))}</a> <small>${esc(years(P[id]))}</small></li>`).join("")}</ul></section>`;}).join("")}
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+/* ---------- lightbox ---------- */
+function lbOpen(i){ lbI=i; lbShow(); $("#lb").style.display="flex"; document.body.style.overflow="hidden"; }
+function lbShow(){ const m = LB[lbI]; $("#lbImg").src = "full/"+m.f; $("#lbImg").classList.remove("zoom");
+  $("#lbCap").textContent = `${m.c}  (${lbI+1} of ${LB.length})`; $("#lbOpen").href = "full/"+m.f; }
+function lbStep(d){ lbI = (lbI + d + LB.length) % LB.length; lbShow(); }
+function lbZoom(){ $("#lbImg").classList.toggle("zoom"); }
+function lbClose(){ $("#lb").style.display="none"; document.body.style.overflow=""; }
+document.addEventListener("keydown", e => { if ($("#lb").style.display==="flex"){ if(e.key==="Escape")lbClose(); if(e.key==="ArrowRight")lbStep(1); if(e.key==="ArrowLeft")lbStep(-1);} else if (e.key==="Escape") hideSheet(); });
+
+/* ---------- router ---------- */
+function route(){
+  hideSheet(); clearSearch(); lbClose();
+  const h = location.hash.replace(/^#\/?/, "");
+  const [view, id] = h.split("/");
+  $("#nTree").classList.toggle("on", !view || view==="tree");
+  $("#nPeople").classList.toggle("on", view==="people");
+  if (view==="p" && id) { renderPerson(id); document.title = fullName(P[id]||{})+" · Schutz Family Tree"; }
+  else if (view==="people") { renderPeople(); document.title = "Everyone · Schutz Family Tree"; }
+  else { renderTree(id || ROOT); document.title = "Schutz Family Tree"; }
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>
