@@ -105,6 +105,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 .portrait img{display:block;width:170px;height:210px;object-fit:cover;border-radius:8px}
 .about p{margin:0 0 12px;font-family:var(--serif);font-size:18px;line-height:1.6}
 .pid{margin-top:40px;color:#b0a392;font-size:12.5px}
+.gbar{display:none;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);color:#5a4030;padding:8px 16px;font-size:14.5px;border-bottom:1px solid var(--line)}
 .notice{background:var(--accent-soft);border-radius:10px;padding:12px 14px;color:#5a4030;font-size:14.5px}
 
 /* people index */
@@ -145,12 +146,13 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 <body>
 <header>
   <a class="brand" href="#/">Schutz Family Tree</a>
-  <nav><a href="#/" id="nTree">Tree</a><a href="#/people" id="nPeople">Everyone</a></nav>
+  <nav><a href="#/" id="nTree">Tree</a><a href="#/people" id="nPeople">Everyone</a><a href="javascript:void(0)" id="nGer" onclick="toggleGermany()">Germany</a></nav>
   <div class="search">
     <input id="q" type="search" placeholder="Search a name…" autocomplete="off" aria-label="Search people">
     <div class="results" id="res"></div>
   </div>
 </header>
+<div id="gbar" class="gbar">Showing the Germany branch: the Heumann and Schütz families. <a href="javascript:void(0)" onclick="toggleGermany()">Show the whole tree</a></div>
 <main id="app"></main>
 
 <div class="sheet" id="sheet" role="dialog">
@@ -183,7 +185,30 @@ const LABELS = {
   "190091348118": "Mom",
 };
 Object.entries(LABELS).forEach(([id, l]) => { if (P[id]) P[id].label = l; });
-const ROOT = T.root || Object.keys(P)[0];
+const MAIN_ROOT = T.root || Object.keys(P)[0];
+
+/* "Germany" view: Jonas (Wolf) Heumann + Odilia Israel and Ludwig Jakob Schütz + Anna Maria Forwe,
+   all their descendants, and the people those descendants married. */
+const G_TOP = ["192772669267","192772669635","192748599582","192260835211"];
+const G_ROOT = "190050522511";
+const GSET = (() => {
+  const kidsRaw = x => (P[x]?.fams||[]).flatMap(f => F[f].children);
+  const spRaw = x => (P[x]?.fams||[]).map(f => F[f].husb===x ? F[f].wife : F[f].husb).filter(Boolean);
+  const desc = new Set(G_TOP.filter(x => P[x])), st = [...desc];
+  while (st.length){ const x = st.pop(); kidsRaw(x).forEach(c => { if (!desc.has(c)){ desc.add(c); st.push(c); } }); }
+  const all = new Set(desc); desc.forEach(x => spRaw(x).forEach(s => all.add(s)));
+  return all;
+})();
+let GERMANY = false;
+try { GERMANY = localStorage.getItem("germany") === "1"; } catch(e){}
+const vis = id => !!id && (!GERMANY || GSET.has(id));
+const rootId = () => GERMANY ? G_ROOT : MAIN_ROOT;
+function toggleGermany(){
+  GERMANY = !GERMANY; try{ localStorage.setItem("germany", GERMANY?"1":"0"); }catch(e){}
+  const h = location.hash.replace(/^#\/?/, ""), [view, id] = h.split("/");
+  if (GERMANY && id && !GSET.has(id)) location.hash = view==="p" ? "#/p/"+G_ROOT : "#/";
+  else route();
+}
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
@@ -199,14 +224,14 @@ function years(p){
 function isLiving(p){ return p.given === "Living" && !p.surname; }
 function parentsOf(id){
   const p = P[id]; if (!p || !p.famc.length) return [null,null];
-  const f = F[p.famc[0]]; return [f.husb, f.wife];
+  const f = F[p.famc[0]]; return [vis(f.husb)?f.husb:null, vis(f.wife)?f.wife:null];
 }
 function spouseFams(id){
-  return (P[id]?.fams||[]).map(fid => { const f = F[fid]; return {f, sp: f.husb===id ? f.wife : f.husb}; });
+  return (P[id]?.fams||[]).map(fid => { const f = F[fid]; const sp = f.husb===id ? f.wife : f.husb; return {f, sp: vis(sp)?sp:null}; });
 }
-function childrenOf(id){ const out=[]; spouseFams(id).forEach(({f}) => f.children.forEach(c => out.includes(c)||out.push(c))); return out; }
+function childrenOf(id){ const out=[]; spouseFams(id).forEach(({f}) => f.children.forEach(c => vis(c) && !out.includes(c) && out.push(c))); return out; }
 function siblingsOf(id){
-  const out=[]; (P[id]?.famc||[]).forEach(fid => F[fid].children.forEach(c => c!==id && !out.includes(c) && out.push(c)));
+  const out=[]; (P[id]?.famc||[]).forEach(fid => F[fid].children.forEach(c => c!==id && vis(c) && !out.includes(c) && out.push(c)));
   return out.sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999));
 }
 
@@ -218,7 +243,7 @@ $("#q").addEventListener("input", () => {
   const toks = fold($("#q").value).split(/\s+/).filter(Boolean);
   const res = $("#res");
   if (!toks.length){ res.style.display="none"; return; }
-  const hits = INDEX.filter(x => toks.every(t => x.hay.includes(t))).slice(0, 15);
+  const hits = INDEX.filter(x => vis(x.id) && toks.every(t => x.hay.includes(t))).slice(0, 15);
   selIdx = -1;
   res.innerHTML = hits.length ? hits.map(h => `<a href="#/p/${h.id}">${esc(fullName(P[h.id]))}<small>${esc(years(P[h.id]))}</small></a>`).join("")
                               : `<a style="color:var(--muted)">No matches</a>`;
@@ -241,7 +266,7 @@ try { SHOW_SIBS = localStorage.getItem("sibs") !== "0"; } catch(e){}
 try { GENS = +localStorage.getItem("gens") || 3; } catch(e){}
 
 function renderTree(id){
-  if (!P[id]) id = ROOT;
+  if (!P[id]) id = rootId();
   const p = P[id];
   const nodes=[], edges=[];
   const W = Math.pow(2,GENS)*(BW+HG);
@@ -304,7 +329,7 @@ function renderTree(id){
   }
   // bounds
   const minX = Math.min(...nodes.map(n=>n.x)) - BW/2 - 30, maxX = Math.max(...nodes.map(n=>n.x)) + BW/2 + 30;
-  const minY = -30, maxY = Math.max(...nodes.map(n=>n.y)) + BH + 40;
+  const minY = Math.min(...nodes.map(n=>n.y)) - 30, maxY = Math.max(...nodes.map(n=>n.y)) + BH + 40;
   const vw = maxX-minX, vh = maxY-minY;
   const narrow = document.documentElement.clientWidth < 640;
   const fit = Math.max(narrow ? .8 : .5, Math.min(1, (document.documentElement.clientWidth-24)/Math.min(vw, W + 2*(BW+HG))));
@@ -333,7 +358,7 @@ function renderTree(id){
       <button class="pill" onclick="toggleSibs()">${SHOW_SIBS?"Hide":"Show"} siblings</button>
       <button class="pill" onclick="zoomBy(.8)" aria-label="Zoom out">−</button>
       <button class="pill" onclick="zoomBy(1.25)" aria-label="Zoom in">+</button>
-      ${id!==ROOT?`<a class="pill" href="#/">Back to start</a>`:""}
+      ${id!==rootId()?`<a class="pill" href="#/">Back to start</a>`:""}
       ${isLiving(p)?"":`<a class="pill" href="#/p/${id}">Open page</a>`}</div>
     <div class="scroller" id="sc"><svg id="svg" width="${vw*zoom}" height="${vh*zoom}" viewBox="${minX} ${minY} ${vw} ${vh}">
       ${labels.join("")}${edgeSvg}${nodeSvg}</svg></div>`;
@@ -426,9 +451,9 @@ function renderPerson(id){
   let spouses = sfs.filter(s=>s.sp).map(({f,sp}) => ({sp, m: f.marr ? ["m.", f.marr.date].filter(Boolean).join(" ") : ""}));
   let fam = famBlock("Parents", [fa, mo]);
   if (spouses.length) fam += `<h3>${spouses.length>1?"Spouses":"Spouse"}</h3><div class="chips">${spouses.map(s=>chip(s.sp, s.m && s.m!=="m." ? s.m : "")).join("")}</div>`;
-  sfs.forEach(({f, sp}) => { if (f.children.length) {
+  sfs.forEach(({f, sp}) => { const kids = f.children.filter(vis); if (kids.length) {
     const lbl = sfs.length>1 && sp ? `Children with ${esc(fullName(P[sp]))}` : "Children";
-    fam += `<h3>${lbl}</h3><div class="chips">${[...f.children].sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(c=>chip(c)).join("")}</div>`; } });
+    fam += `<h3>${lbl}</h3><div class="chips">${kids.sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(c=>chip(c)).join("")}</div>`; } });
   fam += famBlock("Siblings", sibs);
   const photo = typeof PHOTOS[id]==="string" ? PHOTOS[id].trim() : "";
   PHOTO_NOW = photo ? {f: photo, c: fullName(p), raw: true} : null;
@@ -452,11 +477,11 @@ function renderPerson(id){
 /* ---------- everyone ---------- */
 function renderPeople(){
   const groups = {};
-  Object.entries(P).forEach(([id,p]) => { if (isLiving(p)) return; const s = p.surname || "(no surname)"; (groups[s] ||= []).push(id); });
+  Object.entries(P).forEach(([id,p]) => { if (isLiving(p) || !vis(id)) return; const s = p.surname || "(no surname)"; (groups[s] ||= []).push(id); });
   const names = Object.keys(groups).sort((a,b)=>fold(a).localeCompare(fold(b)));
   const letters = [...new Set(names.map(n=>fold(n)[0].toUpperCase()))];
-  $("#app").innerHTML = `<div class="page"><h1>Everyone in the tree</h1>
-    <p class="lede">${INDEX.length} people, grouped by surname.${T.livingHidden?" Living relatives aren't listed.":""}</p>
+  $("#app").innerHTML = `<div class="page"><h1>${GERMANY ? "Everyone in the Germany branch" : "Everyone in the tree"}</h1>
+    <p class="lede">${INDEX.filter(x=>vis(x.id)).length} people, grouped by surname.${T.livingHidden?" Living relatives aren't listed.":""}</p>
     <div class="letters">${letters.map(l=>`<a href="javascript:void(0)" onclick="document.getElementById('L-${l}').scrollIntoView({behavior:'smooth'})">${l}</a>`).join("")}</div>
     ${names.map((n,i)=>{ const L=fold(n)[0].toUpperCase(); const first = i===0 || fold(names[i-1])[0].toUpperCase()!==L;
       return `<section class="surname"${first?` id="L-${L}"`:""}><h2>${esc(n)} <small style="color:var(--muted);font-size:14px">${groups[n].length}</small></h2><ul class="plist">${
@@ -481,9 +506,11 @@ function route(){
   const [view, id] = h.split("/");
   $("#nTree").classList.toggle("on", !view || view==="tree");
   $("#nPeople").classList.toggle("on", view==="people");
+  $("#nGer").classList.toggle("on", GERMANY);
+  $("#gbar").style.display = GERMANY ? "flex" : "none";
   if (view==="p" && id) { renderPerson(id); document.title = fullName(P[id]||{})+" · Schutz Family Tree"; }
   else if (view==="people") { renderPeople(); document.title = "Everyone · Schutz Family Tree"; }
-  else { renderTree(id || ROOT); document.title = "Schutz Family Tree"; }
+  else { renderTree(id || rootId()); document.title = "Schutz Family Tree"; }
 }
 window.addEventListener("hashchange", route);
 route();
