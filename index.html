@@ -450,10 +450,16 @@ function renderPerson(id){
   const famBlock = (title, ids, extra) => ids.filter(Boolean).length ? `<h3>${title}</h3><div class="chips">${ids.filter(Boolean).map(i=>chip(i, extra && extra(i))).join("")}</div>` : "";
   let spouses = sfs.filter(s=>s.sp).map(({f,sp}) => ({sp, m: f.marr ? ["m.", f.marr.date].filter(Boolean).join(" ") : ""}));
   let fam = famBlock("Parents", [fa, mo]);
+  const stepPar = [];
+  (p.stepfamc||[]).forEach(fid => { const f = F[fid]; [f.husb, f.wife].forEach(x => { if (vis(x) && x!==fa && x!==mo && !stepPar.includes(x)) stepPar.push(x); }); });
+  fam += famBlock(stepPar.length>1 ? "Step-parents" : "Step-parent", stepPar);
   if (spouses.length) fam += `<h3>${spouses.length>1?"Spouses":"Spouse"}</h3><div class="chips">${spouses.map(s=>chip(s.sp, s.m && s.m!=="m." ? s.m : "")).join("")}</div>`;
   sfs.forEach(({f, sp}) => { const kids = f.children.filter(vis); if (kids.length) {
     const lbl = sfs.length>1 && sp ? `Children with ${esc(fullName(P[sp]))}` : "Children";
     fam += `<h3>${lbl}</h3><div class="chips">${kids.sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(c=>chip(c)).join("")}</div>`; } });
+  const stepKids = [];
+  sfs.forEach(({f}) => (f.stepchildren||[]).forEach(c => { if (vis(c) && !stepKids.includes(c)) stepKids.push(c); }));
+  fam += famBlock("Stepchildren", stepKids);
   fam += famBlock("Siblings", sibs);
   const photo = typeof PHOTOS[id]==="string" ? PHOTOS[id].trim() : "";
   PHOTO_NOW = photo ? {f: photo, c: fullName(p), raw: true} : null;
