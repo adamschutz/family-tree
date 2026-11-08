@@ -29,11 +29,6 @@ window.STORIES = {
 
 Jonas worked as a commercial clerk or merchant, and the family seemingly moved to Siegburg after the birth of their daughter Adda Adele (1909). Their second daughter, Betty (1912) was born in Siegburg. 
 
-Jonas died on 12 Feb 1929 in Brühl but was buried in Siegburg. 
-
-Julia Scherer was deported from Cologne to the Theresienstadt Ghetto on 28 Jul 1942 (Transport III/2, Train Da 76). She was then sent to Auschwitz (Transport Ds) on 18 Dec 1943 where she died on 14 Mar 1944. 
-
-Both Adda Adele and Betty fled to England sometime before 1939 when they are both recorded as domestic servants at the same manor in Lancashire, England. It seems they worked the rest of their lives as domestic servants in various households. Adda Adele died on 25 Sept 1964 and is buried in the Waltham Abbey Jewish Cemetery. Betty died on 11 May 1989 in Lancashire.`,
-
+Jonas died on 12 Feb 1929 in Brühl but was buried in Siegburg.`, 
 
 };
