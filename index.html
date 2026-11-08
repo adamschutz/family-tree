@@ -100,6 +100,9 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 .srcs{font-size:14px;color:#4a4036;padding-left:18px}
 .srcs li{margin:5px 0}
 .srcs small{color:var(--muted)}
+.phead{display:flex;gap:22px;align-items:flex-start}
+.portrait{flex:none;border:1px solid var(--line);background:var(--card);padding:5px;border-radius:12px;cursor:zoom-in}
+.portrait img{display:block;width:170px;height:210px;object-fit:cover;border-radius:8px}
 .about p{margin:0 0 12px;font-family:var(--serif);font-size:18px;line-height:1.6}
 .pid{margin-top:40px;color:#b0a392;font-size:12.5px}
 .notice{background:var(--accent-soft);border-radius:10px;padding:12px 14px;color:#5a4030;font-size:14.5px}
@@ -128,6 +131,8 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
   .brand{font-size:18px}
   .search{order:3;flex-basis:100%;max-width:none}
   .page h1{font-size:27px}
+  .phead{flex-direction:column;gap:14px}
+  .portrait img{width:150px;height:185px}
   .facts{grid-template-columns:86px 1fr}
   .tl li{grid-template-columns:56px 1fr}
   .scroller{height:calc(100dvh - 160px)}
@@ -164,9 +169,11 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 
 <script src="data.js"></script>
 <script src="stories.js"></script>
+<script src="photos.js"></script>
 <script>
 const T = window.TREE, P = T.people, F = T.families;
 const STORIES = window.STORIES || {};
+const PHOTOS = window.PHOTOS || {};
 
 /* Short labels shown in place of "Living" for specific people.
    To add or change one, use the person's page ID (shown at the bottom of their page). */
@@ -382,7 +389,9 @@ function chip(id, extra){
   const href = liv ? `#/tree/${id}` : `#/p/${id}`;
   return `<a class="chip ${q.sex||""}${liv&&!lab?' living':''}" href="${href}"><b>${esc(fullName(q))}</b><span>${esc([years(q), extra].filter(Boolean).join(" · ")) || "&nbsp;"}</span></a>`;
 }
-let LB = [], lbI = 0;
+let LB = [], lbI = 0, PHOTO_NOW = null, CUR_MEDIA = [];
+function lbMedia(i){ LB = CUR_MEDIA; lbOpen(i); }
+function photoOpen(){ if (!PHOTO_NOW) return; LB = [PHOTO_NOW]; lbOpen(0); }
 function renderPerson(id){
   const p = P[id];
   if (!p || isLiving(p)) { renderTree(id); return; }
@@ -406,9 +415,9 @@ function renderPerson(id){
       <div class="what">${esc(e.label)}${e.t==="EVEN"||e.t==="_MILT"?"":""}</div>
       <div class="det">${esc([e.date && e.date!==e.y ? e.date : "", e.place].filter(Boolean).join(" · "))}</div>
       ${e.note ? `<div class="note">${esc(e.note)}</div>` : ""}</div></li>`).join("")}</ul>` : `<p class="lede">No dated events recorded yet.</p>`;
-  LB = p.media;
+  LB = p.media; CUR_MEDIA = p.media;
   const mediaHtml = p.media.length ? `<section><h2>Records &amp; photos</h2><div class="grid">${p.media.map((m,i)=>
-      `<button class="thumb" onclick="lbOpen(${i})"><img loading="lazy" src="thumb/${esc(m.f)}" alt="${esc(m.c)}"><span>${esc(m.c)}</span></button>`).join("")}</div></section>` : "";
+      `<button class="thumb" onclick="lbMedia(${i})"><img loading="lazy" src="thumb/${esc(m.f)}" alt="${esc(m.c)}"><span>${esc(m.c)}</span></button>`).join("")}</div></section>` : "";
   const stories = p.stories.length ? `<section><h2>Stories</h2>${p.stories.map(s=>`<div class="story"><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join("")}</section>` : "";
   const notes = p.notes.length ? `<section><h2>Notes</h2>${p.notes.map(n=>`<div class="story"><p>${esc(n)}</p></div>`).join("")}</section>` : "";
   const srcs = p.sources.length ? `<section><h2>Sources</h2><details><summary>${p.sources.length} source${p.sources.length>1?"s":""} cited</summary>
@@ -421,13 +430,16 @@ function renderPerson(id){
     const lbl = sfs.length>1 && sp ? `Children with ${esc(fullName(P[sp]))}` : "Children";
     fam += `<h3>${lbl}</h3><div class="chips">${[...f.children].sort((a,b)=>(yr(P[a].birth)||9999)-(yr(P[b].birth)||9999)).map(c=>chip(c)).join("")}</div>`; } });
   fam += famBlock("Siblings", sibs);
+  const photo = typeof PHOTOS[id]==="string" ? PHOTOS[id].trim() : "";
+  PHOTO_NOW = photo ? {f: photo, c: fullName(p), raw: true} : null;
   const ab = typeof STORIES[id]==="string" ? STORIES[id].trim() : "";
   const about = ab ? `<section class="about"><h2>About</h2>${ab.split(/\n\s*\n/).map(par=>`<p>${esc(par.trim())}</p>`).join("")}</section>` : "";
   $("#app").innerHTML = `<article class="page">
+    <div class="phead">${photo ? `<button class="portrait" onclick="photoOpen()"><img src="${esc(photo)}" alt="${esc(fullName(p))}" onerror="this.closest('.portrait').remove()"></button>` : ""}<div>
     <h1>${esc(fullName(p))}</h1>
     ${lede.map(l=>`<p class="lede">${l}</p>`).join("")}
     ${p.alt.length ? `<p class="aka">Also recorded as ${p.alt.map(esc).join("; ")}</p>` : ""}
-    <div class="actions"><a class="btn" href="#/tree/${id}">Show in tree</a></div>
+    <div class="actions"><a class="btn" href="#/tree/${id}">Show in tree</a></div></div></div>
     ${about}
     <section class="fam"><h2>Family</h2>${fam || '<p class="lede">No family links recorded.</p>'}</section>
     <section><h2>Life events</h2>${tlHtml}</section>
@@ -455,8 +467,8 @@ function renderPeople(){
 
 /* ---------- lightbox ---------- */
 function lbOpen(i){ lbI=i; lbShow(); $("#lb").style.display="flex"; document.body.style.overflow="hidden"; }
-function lbShow(){ const m = LB[lbI]; $("#lbImg").src = "full/"+m.f; $("#lbImg").classList.remove("zoom");
-  $("#lbCap").textContent = `${m.c}  (${lbI+1} of ${LB.length})`; $("#lbOpen").href = "full/"+m.f; }
+function lbShow(){ const m = LB[lbI]; const src = m.raw ? m.f : "full/"+m.f; $("#lbImg").src = src; $("#lbImg").classList.remove("zoom");
+  $("#lbCap").textContent = `${m.c}  (${lbI+1} of ${LB.length})`; $("#lbOpen").href = src; }
 function lbStep(d){ lbI = (lbI + d + LB.length) % LB.length; lbShow(); }
 function lbZoom(){ $("#lbImg").classList.toggle("zoom"); }
 function lbClose(){ $("#lb").style.display="none"; document.body.style.overflow=""; }
