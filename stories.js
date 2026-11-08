@@ -19,4 +19,11 @@
 
 window.STORIES = {
 
+  // Jonas Heumann (1842)
+  " ": 'Jonas Heumann was born in Brühl on July 21, 1842 to Wilhelmine Wolff who was unwed. Later court proceedings established Jonas Abraham/Heumann as the father, therefore “legitimizing” Jonas’ birth. Based on my current research, the father’s last name is a little unclear. It appears that throughout his life, Jonas may have gone by Wolf which created some confusion. All four of his children’s birth records originally listed Wolf Heimann as their father. These records also contain later annotations correcting the father’s name to Jonas Heumann.
+  'Jonas worked as a butcher for many years, and several of his sons and grandsons continued in the trade. He died on Oct 29, 1926 in Cologne, Germany at the Israelitisches Asyl, a hospital and old-age home.',
+
+
+
+
 };
