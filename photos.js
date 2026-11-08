@@ -13,4 +13,7 @@
 
 window.PHOTOS = {
 
+  "192783854572": "photos/albert-heumann.jpg",
+  "192783855457": "photos/hedwig-stein.jpg",
+
 };
