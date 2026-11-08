@@ -167,11 +167,20 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 <script>
 const T = window.TREE, P = T.people, F = T.families;
 const STORIES = window.STORIES || {};
+
+/* Short labels shown in place of "Living" for specific people.
+   To add or change one, use the person's page ID (shown at the bottom of their page). */
+const LABELS = {
+  "190050522509": "Adam",
+  "190050522510": "Dad",
+  "190091348118": "Mom",
+};
+Object.entries(LABELS).forEach(([id, l]) => { if (P[id]) P[id].label = l; });
 const ROOT = T.root || Object.keys(P)[0];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-function fullName(p){ return [p.given, p.surname, p.suffix].filter(Boolean).join(" ") || "Unknown"; }
+function fullName(p){ if (p.label) return p.label; return [p.given, p.surname, p.suffix].filter(Boolean).join(" ") || "Unknown"; }
 function yr(e){ const m = e && (e.date||"").match(/\d{4}/); return m ? m[0] : ""; }
 function approx(e){ return e && /about|before|after|between/i.test(e.date||"") ? "c. " : ""; }
 function years(p){
@@ -196,7 +205,7 @@ function siblingsOf(id){
 
 /* ---------- search ---------- */
 const fold = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss").toLowerCase();
-const INDEX = Object.entries(P).filter(([,p])=>!isLiving(p)).map(([id,p]) => ({id, hay: fold([p.given,p.surname,...(p.alt||[])].join(" "))}));
+const INDEX = Object.entries(P).filter(([,p])=>!isLiving(p) || p.label).map(([id,p]) => ({id, hay: fold(p.label || [p.given,p.surname,...(p.alt||[])].join(" "))}));
 let selIdx = -1;
 $("#q").addEventListener("input", () => {
   const toks = fold($("#q").value).split(/\s+/).filter(Boolean);
@@ -220,7 +229,8 @@ function clearSearch(){ $("#q").value=""; $("#res").style.display="none"; $("#q"
 
 /* ---------- tree ---------- */
 const BW=172, BH=58, HG=18, VG=54;
-let GENS = +(localStorage.getItem?.("gens")||3) || 3;
+let GENS = 3, SHOW_SIBS = true;
+try { SHOW_SIBS = localStorage.getItem("sibs") !== "0"; } catch(e){}
 try { GENS = +localStorage.getItem("gens") || 3; } catch(e){}
 
 function renderTree(id){
@@ -249,6 +259,17 @@ function renderTree(id){
     }
   }
   anc(id, 0, 0);
+  // siblings, to the left of the center person, oldest farthest left
+  if (SHOW_SIBS){
+    const sibs = siblingsOf(id);
+    if (sibs.length){
+      const barY = cy - VG/4;
+      const xs = sibs.map((sb,k) => cx - (sibs.length - k)*(BW+HG));
+      sibs.forEach((sb,k) => nodes.push({id:sb, x:xs[k], y:cy, sib:true}));
+      edges.push(`M${Math.min(...xs)},${barY} H${cx}`);
+      xs.forEach(x => edges.push(`M${x},${barY} V${cy}`));
+    }
+  }
   // spouses
   const sfs = spouseFams(id);
   let sx = cx;
@@ -279,7 +300,7 @@ function renderTree(id){
   const minY = -30, maxY = Math.max(...nodes.map(n=>n.y)) + BH + 40;
   const vw = maxX-minX, vh = maxY-minY;
   const narrow = document.documentElement.clientWidth < 640;
-  const fit = Math.max(narrow ? .8 : .5, Math.min(1, (document.documentElement.clientWidth-24)/vw));
+  const fit = Math.max(narrow ? .8 : .5, Math.min(1, (document.documentElement.clientWidth-24)/Math.min(vw, W + 2*(BW+HG))));
   const zoom = window.__zoom || fit; window.__lastZoom = zoom;
   const labels = [];
   for (let g=1; g<=GENS; g++){
@@ -287,7 +308,7 @@ function renderTree(id){
     if (nodes.some(n=>n.y===rowY(g))) labels.push(`<text class="glabel" x="${minX+12}" y="${rowY(g)-8}">${name}</text>`);
   }
   const nodeSvg = nodes.map(n => {
-    const q = P[n.id]; const liv = isLiving(q);
+    const q = P[n.id]; const liv = isLiving(q) && !q.label;
     const name = fullName(q); const lines = wrap(name, 19);
     const col = q.sex==="M" ? "var(--m)" : q.sex==="F" ? "var(--f)" : "var(--u)";
     const y0 = lines.length>1 ? 20 : 25;
@@ -299,9 +320,10 @@ function renderTree(id){
   }).join("");
   const edgeSvg = edges.map(e => typeof e==="string" ? `<path class="edge" d="${e}"/>` : `<path class="edge sp" d="${e.d}"/>`).join("");
   $("#app").innerHTML = `
-    <div class="treebar"><span class="who">${isLiving(p)?"Starting point":"Centered on "+esc(fullName(p))}</span>
+    <div class="treebar"><span class="who">${isLiving(p) && !p.label ? "Starting point" : "Centered on "+esc(fullName(p))}</span>
       <button class="pill" onclick="setGens(-1)">− generations</button>
       <button class="pill" onclick="setGens(1)">+ generations</button>
+      <button class="pill" onclick="toggleSibs()">${SHOW_SIBS?"Hide":"Show"} siblings</button>
       <button class="pill" onclick="zoomBy(.8)" aria-label="Zoom out">−</button>
       <button class="pill" onclick="zoomBy(1.25)" aria-label="Zoom in">+</button>
       ${id!==ROOT?`<a class="pill" href="#/">Back to start</a>`:""}
@@ -330,6 +352,7 @@ function wrap(s, n){
   return lines;
 }
 function setGens(d){ GENS = Math.max(1, Math.min(5, GENS+d)); try{localStorage.setItem("gens",GENS)}catch(e){} route(); }
+function toggleSibs(){ SHOW_SIBS = !SHOW_SIBS; try{localStorage.setItem("sibs", SHOW_SIBS?"1":"0")}catch(e){} route(); }
 function zoomBy(f){ window.__zoom = Math.max(.3, Math.min(2.2, (window.__lastZoom||1)*f)); route(); }
 let dragMoved=false;
 function enableDrag(el){
@@ -355,8 +378,9 @@ function hideSheet(){ $("#sheet").style.display = "none"; }
 function chip(id, extra){
   const q = P[id]; if (!q) return "";
   const liv = isLiving(q);
+  const lab = liv && q.label;
   const href = liv ? `#/tree/${id}` : `#/p/${id}`;
-  return `<a class="chip ${q.sex||""}${liv?' living':''}" href="${href}"><b>${esc(fullName(q))}</b><span>${esc([years(q), extra].filter(Boolean).join(" · ")) || "&nbsp;"}</span></a>`;
+  return `<a class="chip ${q.sex||""}${liv&&!lab?' living':''}" href="${href}"><b>${esc(fullName(q))}</b><span>${esc([years(q), extra].filter(Boolean).join(" · ")) || "&nbsp;"}</span></a>`;
 }
 let LB = [], lbI = 0;
 function renderPerson(id){
