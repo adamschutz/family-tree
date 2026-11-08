@@ -13,7 +13,21 @@
 
 window.PHOTOS = {
 
+  // Albert Heumann
   "192783854572": "photos/albert-heumann.jpg",
+  // Hedwig Stein
   "192783855457": "photos/hedwig-stein.jpg",
+  // Jonas Werner Heumann
+  "192783855928": "photos/jonas-werner.jpg",
+  // Hermann Heumann
+  "192789472132": "photos/hermann-heumann.jpg",
+  // Karoline Rothschild
+  "192789484408": "photos/karoline-rothschild.jpg",
+  // Josef Heumann
+  "192789920928": "photos/josef-heumann.png",
+  // Kurt Heumann
+  "192789549689": "photos/kurt-heumann.png",
+  // Rolf Heumann
+  "192789550746": "photos/rolf-heumann.png",
 
 };
