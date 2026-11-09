@@ -100,6 +100,8 @@ details summary{cursor:pointer;color:var(--accent);font-weight:500}
 .srcs{font-size:14px;color:#4a4036;padding-left:18px}
 .srcs li{margin:5px 0}
 .srcs small{color:var(--muted)}
+.srcs a{font-weight:500}
+.srcs .dom{white-space:nowrap}
 .phead{display:flex;gap:22px;align-items:flex-start}
 .portrait{flex:none;border:1px solid var(--line);background:var(--card);padding:5px;border-radius:12px;cursor:zoom-in}
 .portrait img{display:block;width:170px;height:210px;object-fit:cover;border-radius:8px}
@@ -446,7 +448,7 @@ function renderPerson(id){
   const stories = p.stories.length ? `<section><h2>Stories</h2>${p.stories.map(s=>`<div class="story"><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join("")}</section>` : "";
   const notes = p.notes.length ? `<section><h2>Notes</h2>${p.notes.map(n=>`<div class="story"><p>${esc(n)}</p></div>`).join("")}</section>` : "";
   const srcs = p.sources.length ? `<section><h2>Sources</h2><details><summary>${p.sources.length} source${p.sources.length>1?"s":""} cited</summary>
-      <ul class="srcs">${p.sources.map(s=>`<li>${esc(s.title)}${s.page?`<br><small>${esc(s.page)}</small>`:""}</li>`).join("")}</ul></details></section>` : "";
+      <ul class="srcs">${p.sources.map(s=>`<li>${s.url && /^https?:\/\//.test(s.url) ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a> <small class="dom">↗ ${esc(s.url.split("/")[2].replace(/^www\d?\./,""))}</small>` : esc(s.title)}${s.page?`<br><small>${esc(s.page)}</small>`:""}</li>`).join("")}</ul></details></section>` : "";
   const famBlock = (title, ids, extra) => ids.filter(Boolean).length ? `<h3>${title}</h3><div class="chips">${ids.filter(Boolean).map(i=>chip(i, extra && extra(i))).join("")}</div>` : "";
   let spouses = sfs.filter(s=>s.sp).map(({f,sp}) => ({sp, m: f.marr ? ["m.", f.marr.date].filter(Boolean).join(" ") : ""}));
   let fam = famBlock("Parents", [fa, mo]);
