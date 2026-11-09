@@ -32,7 +32,7 @@ Jonas worked as a commercial clerk or merchant, and the family seemingly moved t
 Jonas died on 12 Feb 1929 in Brühl but was buried in Siegburg.`, 
 
   // Adelheid Heumann
-  "192793070665": `Adelheid was deported to the Riga Ghetto on 7 Dec 1941. She was sent via train from Deutz-Tief Train station, Cologne to Skirotava Train Station, and Riga where they marched by foot to the Riga Ghetto. According to the Yad Vashem entry, of the 1,011 Jews on this transport, only 87 survived. She presumably died in Riga, date unknown.`,
+  "192793070665": `Adelheid was deported to the Riga Ghetto on 7 Dec 1941. Her transport was sent via train from Deutz-Tief Train station, Cologne to the Skirotava Train Station Latvia where they marched by foot to the Riga Ghetto. According to the Yad Vashem entry, of the 1,011 Jews on this transport, only 87 survived. She presumably died in Riga, date unknown.`,
 
   // Hermann Heumann
   "192789472132": `Hermann was born on Nov. 12, 1877 in Brühl and married Karoline Rothschild Nov. 7, 1909. That year the two moved into a house on Wallstraße 35 where Hermann worked as a butcher; later records indicate it was owned by Karoline.
