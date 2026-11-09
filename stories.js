@@ -31,4 +31,7 @@ Jonas worked as a commercial clerk or merchant, and the family seemingly moved t
 
 Jonas died on 12 Feb 1929 in Brühl but was buried in Siegburg.`, 
 
+  // Adelheid Heumann
+  "192793070665": `Adelheid was deported to the Riga Ghetto on 7 Dec 1941. She was sent via train from Deutz-Tief Train station, Cologne to Skirotava Train Station, and Riga where they marched by foot to the Riga Ghetto. According to the Yad Vashem entry, of the 1,011 Jews on this transport, only 87 survived. She presumably died in Riga, date unknown.`,
+
 };
